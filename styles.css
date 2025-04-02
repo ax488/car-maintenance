@@ -1,0 +1,453 @@
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
+
+.disclaimer-box {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.source-info {
+    color: #495057;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.disclaimer-text, .feedback-text {
+    color: #6c757d;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+}
+
+.feedback-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.feedback-btn:hover {
+    background-color: #0056b3;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+.suggestions-box {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1000;
+}
+
+.suggestion-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.suggestion-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f5f5f5;
+}
+
+.search-box {
+    position: relative;
+    display: inline-block; /* 使建议框能对齐输入框 */
+}
+
+.suggestion-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.suggestion-item:hover {
+    background-color: #f5f5f5;
+}
+
+.suggestion-item .name-cn {
+    font-weight: bold;
+}
+
+.suggestion-item .name-en {
+    color: #666;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
+.search-box {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.maintenance-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 0.9em;
+}
+
+.maintenance-table tr {
+    border-bottom: 1px solid #ddd;
+}
+
+.maintenance-table tr:last-child {
+    border-bottom: none;
+}
+
+.maintenance-table td {
+    padding: 12px 15px;
+}
+
+.maintenance-key {
+    font-weight: bold;
+    color: #333;
+    width: 40%;
+}
+
+.maintenance-value {
+    color: #555;
+}
+
+.nested-header {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.nested-key {
+    padding-left: 30px !important;
+    color: #444;
+}
+
+.nested-value {
+    color: #666;
+}
+
+input {
+    padding: 10px;
+    width: 300px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.result-box {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: none;
+}
+
+.maintenance-item {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+}
+
+.history-box {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.history-item {
+    display: inline-block;
+    margin: 5px;
+    padding: 5px 10px;
+    background: #f5f5f5;
+    border-radius: 15px;
+    cursor: pointer;
+}
+
+.history-item:hover {
+    background: #e0e0e0;
+}
+
+.history-title {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+/* 反馈表单样式 */
+.feedback-form {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-top: 20px;
+}
+
+.feedback-form h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.submit-btn, .sponsor-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+}
+
+.feedback-btn {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.feedback-btn:hover {
+    background-color: #45a049;
+}
+
+.feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.feedback-form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.sponsor-btn {
+    margin-left: 10px;
+    background-color: #ff9800;
+}
+
+.sponsor-qr {
+    text-align: center;
+    padding: 20px;
+}
+
+.qr-image {
+    max-width: 200px;
+    margin: 20px auto;
+    display: block;
+}
+
+.back-btn {
+    background-color: #666;
+    margin-top: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.submit-btn:hover {
+    background-color: #45a049;
+}
+
+.feedback-success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: none;
+}
+
+.feedback-error {
+    background-color: #f2dede;
+    color: #a94442;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: none;
+}
+// ... 现有代码 ...
+
+// 修改选择车型函数，修复 disclaimerBox 未定义错误
+function selectCar(car) {
+    const input = document.getElementById('carModel');
+    input.value = car;
+    document.getElementById('suggestions').style.display = 'none';
+    
+    const resultDiv = document.getElementById('result');
+    const maintenance = maintenanceDatabase[car];
+    
+    if (maintenance) {
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `
+            <div class="maintenance-item">
+                <h3>${car}</h3>
+                ${renderMaintenanceDetails(maintenance)}
+                <div class="personalized-maintenance">
+                    <h4>个性化保养建议</h4>
+                    <div class="input-group">
+                        <label>上牌时间：</label>
+                        <input type="date" id="registrationDate">
+                    </div>
+                    <div class="input-group">
+                        <label>当前里程：</label>
+                        <input type="number" id="currentMileage" placeholder="请输入公里数">
+                    </div>
+                    <div class="input-group">
+                        <label>驾驶习惯：</label>
+                        <select id="drivingHabits">
+                            <option value="moderate">一般</option>
+                            <option value="aggressive">激进</option>
+                            <option value="conservative">保守</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>使用环境：</label>
+                        <select id="climateZone">
+                            <option value="normal">普通</option>
+                            <option value="hot">高温</option>
+                            <option value="cold">寒冷</option>
+                        </select>
+                    </div>
+                    <button onclick="showPersonalizedAdvice('${car}')" class="advice-btn">获取建议</button>
+                </div>
+            </div>
+            <div class="disclaimer-box">
+                <p class="source-info">${dataDisclaimer.source}</p>
+                <p class="disclaimer-text">${dataDisclaimer.disclaimer}</p>
+                <p class="feedback-text">${dataDisclaimer.feedback}</p>
+                <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
+            </div>
+        `;
+    } else {
+        resultDiv.innerHTML = `
+            <p>未找到匹配的车型信息</p>
+            <div class="disclaimer-box">
+                <p class="source-info">${dataDisclaimer.source}</p>
+                <p class="disclaimer-text">${dataDisclaimer.disclaimer}</p>
+                <p class="feedback-text">${dataDisclaimer.feedback}</p>
+                <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
+            </div>
+        `;
+    }
+}
+
+// 修改显示个性化建议函数，添加驾驶习惯和使用环境参数
+function showPersonalizedAdvice(car) {
+    const regDate = document.getElementById('registrationDate').value;
+    const mileage = parseInt(document.getElementById('currentMileage').value);
+    const drivingHabits = document.getElementById('drivingHabits').value;
+    const climateZone = document.getElementById('climateZone').value;
+    
+    if (!regDate || isNaN(mileage)) {
+        alert('请输入完整的上牌时间和里程信息');
+        return;
+    }
+    
+    const maintenance = maintenanceDatabase[car];
+    const recommendations = calculatePersonalizedMaintenance(regDate, mileage, maintenance, drivingHabits, climateZone);
+    
+    const adviceDiv = document.createElement('div');
+    adviceDiv.className = 'maintenance-advice';
+    adviceDiv.innerHTML = `
+        <h4>根据您的用车情况，建议：</h4>
+        <ul>
+            ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+        </ul>
+        <p class="advice-note">注：以上建议仅供参考，请结合实际使用情况和专业技师建议进行保养。</p>
+    `;
+    
+    // 插入建议到个性化保养区域
+    const personalizedSection = document.querySelector('.personalized-maintenance');
+    const existingAdvice = personalizedSection.querySelector('.maintenance-advice');
+    if (existingAdvice) {
+        existingAdvice.remove();
+    }
+    personalizedSection.appendChild(adviceDiv);
+}
+.input-group select {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 200px;
+}
+
+.maintenance-advice ul {
+    list-style-type: disc;
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.maintenance-advice li {
+    margin: 5px 0;
+    color: #333;
+}
