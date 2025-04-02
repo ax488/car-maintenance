@@ -477,39 +477,163 @@ const maintenanceDatabase = {
     }
 };
 
-// 添加搜索建议功能
-function addSuggestions() {
+// 页面加载完成后初始化功能
+document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('carModel');
-    const datalist = document.createElement('datalist');
-    datalist.id = 'carSuggestions';
+    const searchBtn = document.getElementById('searchBtn');
     
-    // 添加所有可能的搜索词到建议列表
-    const suggestions = [
-        ...Object.keys(maintenanceDatabase),
-        ...Object.keys(carNameMapping)
-    ];
+    // 绑定搜索按钮点击事件
+    searchBtn.addEventListener('click', searchMaintenance);
     
-    suggestions.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        datalist.appendChild(option);
+    // 绑定回车事件
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchMaintenance();
+        }
     });
+
+    // 绑定输入事件，实现实时搜索建议
+    input.addEventListener('input', (e) => {
+        showSuggestions(e.target.value.trim());
+    });
+
+    // 点击页面其他地方时隐藏建议框
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('#suggestions') && !e.target.closest('#carModel')) {
+            document.getElementById('suggestions').style.display = 'none';
+        }
+    });
+});
+
+// 渲染保养详情
+function renderMaintenanceDetails(info) {
+    let html = '<table class="maintenance-table">';
     
-    document.body.appendChild(datalist);
-    input.setAttribute('list', 'carSuggestions');
+    // 处理基本项目
+    for (const [key, value] of Object.entries(info)) {
+        if (typeof value === 'string') {
+            html += `
+                <tr>
+                    <td class="maintenance-key">${getMaintenanceItemName(key)}</td>
+                    <td class="maintenance-value">${value}</td>
+                </tr>`;
+        } else if (typeof value === 'object') {
+            // 处理嵌套项目（如滤清器、链条等）
+            html += `
+                <tr class="nested-header">
+                    <td colspan="2">${getMaintenanceItemName(key)}</td>
+                </tr>`;
+            
+            for (const [subKey, subValue] of Object.entries(value)) {
+                html += `
+                    <tr>
+                        <td class="nested-key">${getMaintenanceItemName(subKey)}</td>
+                        <td class="nested-value">${subValue}</td>
+                    </tr>`;
+            }
+        }
+    }
+    
+    html += '</table>';
+    return html;
+}
+
+// 获取保养项目的中文名称
+function getMaintenanceItemName(key) {
+    const nameMapping = {
+        oil: '机油更换',
+        brake: '刹车系统',
+        filter: '滤清器',
+        timing_belt: '正时皮带',
+        spark_plug: '火花塞',
+        coolant: '冷却液',
+        transmission: '变速箱油',
+        chain: '链条保养',
+        valve_check: '气门间隙检查',
+        air: '空气滤清器',
+        fuel: '燃油滤清器',
+        cabin: '空调滤清器',
+        fluid: '刹车油',
+        pads: '刹车片',
+        check: '检查',
+        replace: '更换',
+        adjustment: '调整',
+        tension: '张力调整',
+        belt: '皮带系统'
+    };
+    
+    return nameMapping[key] || key;
 }
 
 // 实时搜索建议功能
-// 删除重复的 addSuggestions 函数，统一使用 showSuggestions
+function showSuggestions(searchTerm) {
+    const suggestionsDiv = document.getElementById('suggestions');
+    if (!searchTerm) {
+        suggestionsDiv.style.display = 'none';
+        return;
+    }
+
+    const suggestions = [];
+    searchTerm = searchTerm.toLowerCase();
+
+    // 搜索中文名称
+    for (const car of Object.keys(maintenanceDatabase)) {
+        if (car.toLowerCase().includes(searchTerm)) {
+            suggestions.push({
+                chinese: car,
+                english: Object.keys(carNameMapping).find(key => carNameMapping[key] === car) || ''
+            });
+        }
+    }
+
+    // 搜索英文名称
+    for (const [eng, ch] of Object.entries(carNameMapping)) {
+        if (eng.toLowerCase().includes(searchTerm) && !suggestions.some(s => s.chinese === ch)) {
+            suggestions.push({
+                chinese: ch,
+                english: eng
+            });
+        }
+    }
+
+    if (suggestions.length > 0) {
+        let html = '<ul class="suggestion-list">';
+        suggestions.forEach(car => {
+            // 修改这里，改用 fillInput 函数替代 selectCar
+            html += `<li class="suggestion-item" onclick="fillInput('${car.chinese}')">`;
+            if (car.english) {
+                html += `${car.chinese} (${car.english})`;
+            } else {
+                html += car.chinese;
+            }
+            html += '</li>';
+        });
+        html += '</ul>';
+        suggestionsDiv.innerHTML = html;
+        suggestionsDiv.style.display = 'block';
+    } else {
+        suggestionsDiv.style.display = 'none';
+    }
+}
+
+// 添加新函数：只填充输入框
+function fillInput(car) {
+    const input = document.getElementById('carModel');
+    input.value = car;
+    document.getElementById('suggestions').style.display = 'none';
+}
+
+// 选择建议项
+function selectSuggestion(carModel) {
+    document.getElementById('carModel').value = carModel;
+    document.getElementById('suggestions').style.display = 'none';
+    searchMaintenance();
+}
 
 // 修改搜索函数，保留一个统一实现
 function searchMaintenance() {
     const carModel = document.getElementById('carModel').value.trim();
     const resultDiv = document.getElementById('result');
-    const suggestionsDiv = document.getElementById('suggestions');
-    
-    // 隐藏建议框
-    suggestionsDiv.style.display = 'none';
     
     if (!carModel) {
         resultDiv.innerHTML = '<p>请输入车型关键词</p>';
@@ -577,327 +701,86 @@ function searchMaintenance() {
                 <h3>${displayName}</h3>
                 ${renderMaintenanceDetails(maintenanceInfo)}
             </div>
-            <div class="disclaimer-box">
-                <p class="source-info">${dataDisclaimer.source}</p>
-                <p class="disclaimer-text">${dataDisclaimer.disclaimer}</p>
-                <p class="feedback-text">${dataDisclaimer.feedback}</p>
+            <div class="action-buttons">
                 <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
+                <button onclick="showSponsorQR()" class="sponsor-btn">赞助支持</button>
+            </div>
+            <div class="disclaimer-box">
+                <p class="source-info">数据来源：各大汽车厂商官方保养手册</p>
+                <p class="disclaimer-text">免责声明：本工具提供的保养周期数据仅供参考，具体保养时间请以车辆实际使用情况和厂商建议为准。</p>
+                <p class="feedback-text">如发现数据有误或需要补充，欢迎提交反馈。</p>
             </div>
         `;
     } else {
-        resultDiv.innerHTML = '<p>未找到匹配的车型信息</p>';
-    }
-}
-
-// 修改搜索建议函数
-// 统一的搜索建议函数
-function showSuggestions(input) {
-    const suggestionsDiv = document.getElementById('suggestions');
-    const resultDiv = document.getElementById('result');
-    const searchTerm = input.toLowerCase().trim();
-    
-    // 获取输入框位置
-    const inputElement = document.getElementById('carModel');
-    const rect = inputElement.getBoundingClientRect();
-    
-    // 设置建议框位置（添加5px间距）
-    suggestionsDiv.style.top = `${rect.bottom + window.scrollY + 5}px`;
-    suggestionsDiv.style.left = `${rect.left + window.scrollX}px`;
-    suggestionsDiv.style.width = `${rect.width}px`;
-    
-    // 清空旧建议
-    suggestionsDiv.innerHTML = '';
-    
-    if (!searchTerm) {
-        suggestionsDiv.style.display = 'none';
-        resultDiv.style.display = 'none';
-        resultDiv.innerHTML = '';
-        return;
-    }
-
-    // 创建文档片段提升性能
-    const fragment = document.createDocumentFragment();
-    let hasMatches = false;
-    const addedSuggestions = new Set(); // 用于去重
-
-    // 优先匹配中文
-    Object.keys(maintenanceDatabase).forEach(car => {
-        if (car.toLowerCase().includes(searchTerm) && !addedSuggestions.has(car)) {
-            const engName = Object.keys(carNameMapping).find(key => carNameMapping[key] === car);
-            const div = createSuggestionItem(car, engName);
-            fragment.appendChild(div);
-            hasMatches = true;
-            addedSuggestions.add(car);
-        }
-    });
-
-    // 补充匹配英文
-    Object.entries(carNameMapping).forEach(([eng, ch]) => {
-        if (eng.toLowerCase().includes(searchTerm) && !addedSuggestions.has(ch) && maintenanceDatabase[ch]) {
-            const div = createSuggestionItem(ch, eng);
-            fragment.appendChild(div);
-            hasMatches = true;
-            addedSuggestions.add(ch);
-        }
-    });
-
-    // 显示结果
-    if (hasMatches) {
-        suggestionsDiv.appendChild(fragment);
-        suggestionsDiv.style.display = 'block';
-    } else {
-        suggestionsDiv.style.display = 'none';
-    }
-}
-
-// 创建建议项函数
-function createSuggestionItem(cn, en) {
-    const div = document.createElement('div');
-    div.className = 'suggestion-item';
-    div.innerHTML = `
-        <span class="name-cn">${cn}</span>
-        ${en ? `<span class="name-en">(${en})</span>` : ''}
-    `;
-    div.onclick = () => selectCar(cn);
-    return div;
-}
-
-// 修改选择车型函数
-function selectCar(chineseName, englishName) {
-    const input = document.getElementById('carModel');
-    const suggestionsDiv = document.getElementById('suggestions');
-    
-    // 设置输入框的值
-    input.value = chineseName;
-    
-    // 隐藏建议框
-    suggestionsDiv.style.display = 'none';
-    
-    // 显示保养信息
-    const resultDiv = document.getElementById('result');
-    const maintenance = maintenanceDatabase[chineseName];
-    
-    if (maintenance) {
-        resultDiv.style.display = 'block';
         resultDiv.innerHTML = `
-            <div class="maintenance-item">
-                <h3>${englishName ? `${chineseName} (${englishName})` : chineseName}</h3>
-                ${renderMaintenanceDetails(maintenance)}
+            <p>未找到匹配的车型信息</p>
+            <div class="action-buttons">
+                <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
+                <button onclick="showSponsorQR()" class="sponsor-btn">赞助支持</button>
             </div>
             <div class="disclaimer-box">
-                <p class="source-info">${dataDisclaimer.source}</p>
-                <p class="disclaimer-text">${dataDisclaimer.disclaimer}</p>
-                <p class="feedback-text">${dataDisclaimer.feedback}</p>
-                <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
+                <p class="source-info">数据来源：各大汽车厂商官方保养手册</p>
+                <p class="disclaimer-text">免责声明：本工具提供的保养周期数据仅供参考，具体保养时间请以车辆实际使用情况和厂商建议为准。</p>
+                <p class="feedback-text">如发现数据有误或需要补充，欢迎提交反馈。</p>
             </div>
         `;
     }
 }
 
-// 修改页面初始化
-document.addEventListener('DOMContentLoaded', () => {
-    const input = document.getElementById('carModel');
-    const searchBtn = document.getElementById('searchBtn');
-    
-    // 绑定输入事件
-    input.addEventListener('input', (e) => {
-        showSuggestions(e.target.value);
-    });
-    
-    // 绑定搜索按钮点击事件
-    searchBtn.addEventListener('click', searchMaintenance);
-    
-    // 绑定回车事件
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            searchMaintenance();
-        }
-    });
-});
-
-// 添加渲染保养详情的函数
-function renderMaintenanceDetails(maintenance) {
-    let html = '';
-    
-    // 基础保养项目
-    if (maintenance.oil) html += `<p>机油更换：${maintenance.oil}</p>`;
-    
-    // 刹车系统
-    if (typeof maintenance.brake === 'string') {
-        html += `<p>刹车系统检查：${maintenance.brake}</p>`;
-    } else if (maintenance.brake) {
-        html += `
-            <p>刹车液更换：${maintenance.brake.fluid}</p>
-            <p>刹车片更换：${maintenance.brake.pads}</p>
-        `;
-    }
-    
-    // 滤清器
-    if (maintenance.filter) {
-        if (typeof maintenance.filter === 'string') {
-            html += `<p>滤清器更换：${maintenance.filter}</p>`;
-        } else {
-            if (maintenance.filter.air) html += `<p>空气滤清器：${maintenance.filter.air}</p>`;
-            if (maintenance.filter.oil) html += `<p>机油滤清器：${maintenance.filter.oil}</p>`;
-            if (maintenance.filter.fuel) html += `<p>燃油滤清器：${maintenance.filter.fuel}</p>`;
-            if (maintenance.filter.cabin) html += `<p>空调滤清器：${maintenance.filter.cabin}</p>`;
-        }
-    }
-    
-    // 其他保养项目
-    if (maintenance.timing_belt) html += `<p>正时皮带更换：${maintenance.timing_belt}</p>`;
-    if (maintenance.spark_plug) html += `<p>火花塞更换：${maintenance.spark_plug}</p>`;
-    if (maintenance.coolant) html += `<p>冷却液更换：${maintenance.coolant}</p>`;
-    if (maintenance.transmission) html += `<p>变速箱油更换：${maintenance.transmission}</p>`;
-    
-    // 摩托车特有项目
-    if (maintenance.chain) {
-        if (typeof maintenance.chain === 'string') {
-            html += `<p>链条维护：${maintenance.chain}</p>`;
-        } else {
-            if (maintenance.chain.check) html += `<p>链条检查：${maintenance.chain.check}</p>`;
-            if (maintenance.chain.replace) html += `<p>链条更换：${maintenance.chain.replace}</p>`;
-            if (maintenance.chain.adjustment) html += `<p>链条调整：${maintenance.chain.adjustment}</p>`;
-        }
-    }
-    
-    if (maintenance.valve_check) html += `<p>气门间隙检查：${maintenance.valve_check}</p>`;
-    
-    return html;
-}
-
-// 修改搜索函数
-// 添加数据来源和免责声明
-const dataDisclaimer = {
-    source: '数据来源：各车企官方维修手册、4S店保养手册',
-    disclaimer: '免责声明：本数据仅供参考，具体保养周期请以车辆使用手册和当地授权经销商建议为准。不同地区、使用环境可能会影响实际保养周期。',
-    feedback: '如发现数据有误，请通过下方反馈按钮提交更正信息。'
-};
-
-// 在搜索函数中添加免责声明显示
-function searchMaintenance() {
-    const carModel = document.getElementById('carModel').value.trim();
+// 添加赞助二维码显示函数
+function showSponsorQR() {
     const resultDiv = document.getElementById('result');
-    
-    if (!carModel) {
-        resultDiv.innerHTML = '<p>请输入车型关键词</p>';
-        resultDiv.style.display = 'block';
-        return;
-    }
-
-    // 直接匹配中文名称
-    if (maintenanceDatabase[carModel]) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
-            <div class="maintenance-item">
-                <h3>${carModel}</h3>
-                ${renderMaintenanceDetails(maintenanceDatabase[carModel])}
-            </div>
-        `;
-        return;
-    }
-
-    // 匹配英文名称
-    const chineseName = carNameMapping[carModel];
-    if (chineseName && maintenanceDatabase[chineseName]) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
-            <div class="maintenance-item">
-                <h3>${chineseName} (${carModel})</h3>
-                ${renderMaintenanceDetails(maintenanceDatabase[chineseName])}
-            </div>
-        `;
-        return;
-    }
-
-    // 模糊匹配
-    const searchTerm = carModel.toLowerCase();
-    let found = false;
-
-    // 搜索中文名称
-    for (const [car, info] of Object.entries(maintenanceDatabase)) {
-        if (car.toLowerCase().includes(searchTerm)) {
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
-                <div class="maintenance-item">
-                    <h3>${car}</h3>
-                    ${renderMaintenanceDetails(info)}
+    const sponsorHTML = `
+        <div class="sponsor-form">
+            <h3>赞助支持</h3>
+            <div class="qr-container">
+                <div class="qr-item">
+                    <img src="./支付.png" alt="微信支付二维码" class="qr-image">
+                    <p>感谢您的赞助支持</p>
                 </div>
-            `;
-            found = true;
-            break;
-        }
-    }
-
-    // 如果没找到，搜索英文名称
-    if (!found) {
-        for (const [eng, ch] of Object.entries(carNameMapping)) {
-            if (eng.toLowerCase().includes(searchTerm)) {
-                const info = maintenanceDatabase[ch];
-                if (info) {
-                    resultDiv.style.display = 'block';
-                    resultDiv.innerHTML = `
-                        <div class="maintenance-item">
-                            <h3>${ch} (${eng})</h3>
-                            ${renderMaintenanceDetails(info)}
-                        </div>
-                    `;
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    if (!found) {
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = '<p>未找到匹配的车型信息</p>';
-    }
+            </div>
+            <div class="button-group">
+                <button onclick="searchMaintenance()" class="back-btn">返回</button>
+            </div>
+        </div>
+    `;
+    resultDiv.innerHTML = sponsorHTML;
+    resultDiv.style.display = 'block';
 }
+
+// 添加新样式
+style.textContent += `
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+        justify-content: center;
+    }
+
+    .sponsor-btn {
+        background-color: #ff9800;
+        color: white;
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .sponsor-btn:hover {
+        background-color: #f57c00;
+    }
+
+    .sponsor-form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+`;
 
 // 修改选择车型函数
-// 添加个性化保养建议功能
-function calculatePersonalizedMaintenance(registrationDate, mileage, maintenanceInfo) {
-    const now = new Date();
-    const regDate = new Date(registrationDate);
-    const monthsDiff = (now.getFullYear() - regDate.getFullYear()) * 12 + now.getMonth() - regDate.getMonth();
-    
-    let recommendations = [];
-    
-    // 检查各个保养项目
-    if (maintenanceInfo.oil) {
-        const oilInterval = parseMaintenanceInterval(maintenanceInfo.oil);
-        if (mileage >= oilInterval.mileage || monthsDiff >= oilInterval.months) {
-            recommendations.push('需要更换机油');
-        }
-    }
-    
-    if (maintenanceInfo.brake) {
-        if (typeof maintenanceInfo.brake === 'object') {
-            const fluidInterval = parseMaintenanceInterval(maintenanceInfo.brake.fluid);
-            if (mileage >= fluidInterval.mileage || monthsDiff >= fluidInterval.months) {
-                recommendations.push('需要更换刹车液');
-            }
-        }
-    }
-    
-    // ... 其他保养项目的检查 ...
-    
-    return recommendations;
-}
-
-// 解析保养间隔
-function parseMaintenanceInterval(interval) {
-    const mileageMatch = interval.match(/每(\d+)公里/);
-    const monthsMatch = interval.match(/每(\d+)个月/);
-    
-    return {
-        mileage: mileageMatch ? parseInt(mileageMatch[1]) : Infinity,
-        months: monthsMatch ? parseInt(monthsMatch[1]) : Infinity
-    };
-}
-
-// 修改选择车型函数，添加个性化建议
 function selectCar(car) {
     const input = document.getElementById('carModel');
     input.value = car;
@@ -912,178 +795,52 @@ function selectCar(car) {
             <div class="maintenance-item">
                 <h3>${car}</h3>
                 ${renderMaintenanceDetails(maintenance)}
-                <div class="personalized-maintenance">
-                    <h4>个性化保养建议</h4>
-                    <div class="input-group">
-                        <label>上牌时间：</label>
-                        <input type="date" id="registrationDate">
-                    </div>
-                    <div class="input-group">
-                        <label>当前里程：</label>
-                        <input type="number" id="currentMileage" placeholder="请输入公里数">
-                    </div>
-                    <button onclick="showPersonalizedAdvice('${car}')" class="advice-btn">获取建议</button>
-                </div>
             </div>
             <div class="disclaimer-box">
-                <p class="source-info">${dataDisclaimer.source}</p>
-                <p class="disclaimer-text">${dataDisclaimer.disclaimer}</p>
-                <p class="feedback-text">${dataDisclaimer.feedback}</p>
+                <p class="source-info">数据来源：各大汽车厂商官方保养手册</p>
+                <p class="disclaimer-text">免责声明：本工具提供的保养周期数据仅供参考，具体保养时间请以车辆实际使用情况和厂商建议为准。</p>
+                <p class="feedback-text">如发现数据有误或需要补充，欢迎提交反馈。</p>
+                <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
+            </div>
+        `;
+    } else {
+        resultDiv.innerHTML = `
+            <p>未找到匹配的车型信息</p>
+            <div class="disclaimer-box">
+                <p class="source-info">数据来源：各大汽车厂商官方保养手册</p>
+                <p class="disclaimer-text">免责声明：本工具提供的保养周期数据仅供参考，具体保养时间请以车辆实际使用情况和厂商建议为准。</p>
+                <p class="feedback-text">如发现数据有误或需要补充，欢迎提交反馈。</p>
                 <button onclick="showFeedbackForm()" class="feedback-btn">提交反馈</button>
             </div>
         `;
     }
 }
 
-// 显示个性化建议
-function showPersonalizedAdvice(car) {
-    const regDate = document.getElementById('registrationDate').value;
-    const mileage = parseInt(document.getElementById('currentMileage').value);
-    
-    if (!regDate || isNaN(mileage)) {
-        alert('请输入完整的上牌时间和里程信息');
-        return;
-    }
-    
-    const maintenance = maintenanceDatabase[car];
-    const recommendations = calculatePersonalizedMaintenance(regDate, mileage, maintenance);
-    
-    const adviceDiv = document.createElement('div');
-    adviceDiv.className = 'maintenance-advice';
-    adviceDiv.innerHTML = `
-        <h4>根据您的用车情况，建议：</h4>
-        <ul>
-            ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
-        </ul>
-        <p class="advice-note">注：以上建议仅供参考，请结合实际使用情况和专业技师建议进行保养。</p>
-    `;
-    
-    // 插入建议到个性化保养区域
-    const personalizedSection = document.querySelector('.personalized-maintenance');
-    const existingAdvice = personalizedSection.querySelector('.maintenance-advice');
-    if (existingAdvice) {
-        existingAdvice.remove();
-    }
-    personalizedSection.appendChild(adviceDiv);
-}
 
-// 添加相关样式
-const additionalStyle = document.createElement('style');
-additionalStyle.textContent = `
-    .personalized-maintenance {
-        margin-top: 20px;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        background-color: #f5f5f5;
-    }
-    
-    .input-group {
-        margin: 10px 0;
-    }
-    
-    .input-group label {
-        display: inline-block;
-        width: 100px;
-    }
-    
-    .input-group input {
-        padding: 5px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
-    
-    .advice-btn {
-        background-color: #2196F3;
-        color: white;
-        padding: 8px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-    
-    .maintenance-advice {
-        margin-top: 15px;
-        padding: 10px;
-        border-left: 3px solid #2196F3;
-        background-color: #fff;
-    }
-    
-    .advice-note {
-        font-size: 0.9em;
-        color: #666;
-        margin-top: 10px;
-    }
-`;
-
-document.head.appendChild(additionalStyle);
 
 function showFeedbackForm() {
-    const feedbackHtml = `
+    const resultDiv = document.getElementById('result');
+    const formHTML = `
         <div class="feedback-form">
-            <h3>数据反馈</h3>
-            <form id="feedbackForm">
-                <div class="form-group">
-                    <label>车型：</label>
-                    <input type="text" id="feedbackModel" required>
+            <h3>反馈与建议</h3>
+            <div class="qr-container">
+                <div class="qr-item">
+                    <img src="./添加.png" alt="微信二维码" class="qr-image">
+                    <p>扫描添加好友进行反馈</p>
                 </div>
-                <div class="form-group">
-                    <label>需要更正的项目：</label>
-                    <select id="feedbackItem" required>
-                        <option value="oil">机油更换</option>
-                        <option value="brake">刹车系统</option>
-                        <option value="filter">滤清器</option>
-                        <option value="timing_belt">正时皮带</option>
-                        <option value="spark_plug">火花塞</option>
-                        <option value="coolant">冷却液</option>
-                        <option value="transmission">变速箱油</option>
-                        <option value="chain">链条维护</option>
-                        <option value="valve_check">气门间隙</option>
-                        <option value="other">其他</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>正确的保养周期：</label>
-                    <input type="text" id="feedbackCorrection" required>
-                </div>
-                <div class="form-group">
-                    <label>信息来源：</label>
-                    <input type="text" id="feedbackSource" placeholder="如：官方手册、4S店" required>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="submit-btn">提交</button>
-                    <button type="button" onclick="closeFeedbackForm()" class="cancel-btn">取消</button>
-                </div>
-            </form>
+            </div>
+            <div class="button-group">
+                <button onclick="searchMaintenance()" class="back-btn">返回</button>
+            </div>
         </div>
     `;
-
-    const feedbackDiv = document.createElement('div');
-    feedbackDiv.id = 'feedbackOverlay';
-    feedbackDiv.className = 'feedback-overlay';
-    feedbackDiv.innerHTML = feedbackHtml;
-    document.body.appendChild(feedbackDiv);
-
-    // 绑定表单提交事件
-    document.getElementById('feedbackForm').addEventListener('submit', handleFeedback);
+    resultDiv.innerHTML = formHTML;
+    resultDiv.style.display = 'block';
 }
 
-function closeFeedbackForm() {
-    const overlay = document.getElementById('feedbackOverlay');
-    if (overlay) {
-        overlay.remove();
-    }
-}
+// 删除单独的showSponsorQR函数，因为已经合并到反馈表单中
 
-function handleFeedback(event) {
-    event.preventDefault();
-    // 这里可以添加发送反馈到服务器的逻辑
-    alert('感谢您的反馈！我们会认真核实相关信息。');
-    closeFeedbackForm();
-}
-
-// 添加相应的 CSS 样式
+// 添加新的样式
 const style = document.createElement('style');
 style.textContent = `
     .disclaimer-box {
@@ -1177,6 +934,45 @@ style.textContent = `
         background-color: #f44336;
         color: white;
     }
+
+    .qr-container {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+    }
+
+    .qr-item {
+        text-align: center;
+        padding: 10px;
+    }
+
+    .qr-image {
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        margin-bottom: 10px;
+    }
+
+    .button-group {
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .back-btn {
+        background-color: #4CAF50;
+        color: white;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .back-btn:hover {
+        background-color: #45a049;
+    }
 `;
 
 document.head.appendChild(style);
+
+// 使用原有的renderMaintenanceDetails函数
